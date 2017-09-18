@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: List
+metadata: {}
+items:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewBuild
+    generation: 1
+    labels:
+      build: micro-pub
+    name: micro-pub
+    namespace: fbac
+  spec:
+    lookupPolicy:
+      local: false
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewBuild
+    labels:
+      build: micro-pub
+    name: micro-pub
+    namespace: fbac
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: 'micro-pub:latest'
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      binary: {}
+      type: Binary
+    strategy:
+      dockerStrategy: {}
+      type: Docker
+    triggers:
+      - github:
+          secret: xoDZoMWEv06_sntOOr6J
+        type: GitHub
+      - generic:
+          secret: R-f_K9TKmSepQUOCGqN2
+        type: Generic
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      pipeline.alpha.openshift.io/uses: '[{"name": "micro-pub", "namespace": "fbac", "kind": "DeploymentConfig"}]'
+    name: micro-pub-service-pipeline
+  spec:
+    source:
+      git:
+        ref: master
+        uri: https://github.com/bobbydeveaux/micro-micro-pub.git
+      type: Git
+    strategy:
+      type: JenkinsPipeline
+      jenkinsPipelineStrategy:
+        jenkinsfilePath: ./Jenkinsfile
+    triggers:
+    - generic:
+        secret: RandomPassword123
+      type: Generic 
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      openshift.io/host.generated: 'true'
+    labels:
+      app: micro-pub
+    name: micro-pub
+    namespace: fbac
+  spec:
+    host: micro-pub-fbac.127.0.0.1.nip.io
+    port:
+      targetPort: 8222-tcp
+    to:
+      kind: Service
+      name: micro-pub
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    generation: 3
+    labels:
+      app: micro-pub
+    name: micro-pub
+    namespace: fbac
+  spec:
+    replicas: 1
+    selector:
+      app: micro-pub
+      deploymentconfig: micro-pub
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftNewApp
+        creationTimestamp: null
+        labels:
+          app: micro-pub
+          deploymentconfig: micro-pub
+      spec:
+        containers:
+          - env:
+              - name: NATS_HOST
+                value: 'nats://nats:4222'
+            imagePullPolicy: Always
+            name: micro-pub
+            ports:
+              - containerPort: 8181
+                protocol: TCP
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+            - micro-pub
+          from:
+            kind: ImageStreamTag
+            name: 'micro-pub:latest'
+            namespace: fbac
+        type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: micro-pub
+    name: micro-pub
+    namespace: fbac
+  spec:
+    ports:
+      - name: 8181-tcp
+        port: 8181
+        protocol: TCP
+        targetPort: 8181
+    selector:
+      app: micro-pub
+      deploymentconfig: micro-pub
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+
