@@ -55,7 +55,7 @@ items:
     source:
       git:
         ref: master
-        uri: https://github.com/bobbydeveaux/micro-micro-pub.git
+        uri: https://github.com/bobbydeveaux/micro-pub.git
       type: Git
     strategy:
       type: JenkinsPipeline
@@ -77,7 +77,7 @@ items:
   spec:
     host: micro-pub-fbac.127.0.0.1.nip.io
     port:
-      targetPort: 8222-tcp
+      targetPort: 8181-tcp
     to:
       kind: Service
       name: micro-pub
