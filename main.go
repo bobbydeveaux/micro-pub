@@ -79,13 +79,13 @@ func registerVisit(w http.ResponseWriter, r *http.Request) {
 	err := ec.Request("newuser", me, &p, 100*time.Millisecond)
 	if err != nil {
 		if nc.LastError() != nil {
-			log.Fatalf("Error in Request: %v\n", nc.LastError())
+			log.Println("Error in Request: %v\n", nc.LastError())
 		}
-		log.Fatalf("Error in Request: %v\n", err)
+		log.Println("Error in Request: %v\n", err)
+	} else {
+		log.Printf("Published [%s] : '%s'\n", "newuser", p.Name)
+		log.Printf("Received [%v] : '%s'\n", p.Id, p.Name)
 	}
-
-	log.Printf("Published [%s] : '%s'\n", "newuser", p.Name)
-	log.Printf("Received [%v] : '%s'\n", p.Id, p.Name)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -93,7 +93,7 @@ func registerVisit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if b == nil {
-		b = []byte("[]")
+		b = []byte("{\"error\":\"timeout\"}")
 	}
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
